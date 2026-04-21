@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foresight — AI Career Decision Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0f;
+    --bg2: #0f1117;
+    --bg3: #161820;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --amber-glow: rgba(245,166,35,0.06);
+    --text: #e8e6df;
+    --muted: #7a7870;
+    --muted2: #9e9b92;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,11,15,0.85);
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); display: inline-block; }
+  .nav-cta {
+    background: var(--amber); color: #0a0b0f;
+    border: none; border-radius: 6px;
+    padding: 9px 20px; font-size: 14px; font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* ── PAGES ── */
+  .page { display: none; min-height: 100vh; padding-top: 72px; }
+  .page.active { display: block; }
+
+  /* ── HOME PAGE ── */
+  #page-home {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; padding: 100px 24px 60px;
+    text-align: center; position: relative;
+  }
+  .home-grid-bg {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
+  }
+  .home-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid rgba(245,166,35,0.3);
+    background: var(--amber-dim);
+    color: var(--amber); font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 100px;
+    margin-bottom: 36px; letter-spacing: 0.5px;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  h1.hero {
+    font-size: clamp(42px, 6vw, 80px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+    max-width: 860px;
+  }
+  .hero-accent { color: var(--amber); }
+  .hero-sub {
+    font-size: 18px; color: var(--muted2); font-weight: 300;
+    max-width: 520px; line-height: 1.7; margin-bottom: 48px;
+  }
+  .cta-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    background: var(--amber); color: #0a0b0f;
+    border: none; border-radius: 8px;
+    padding: 15px 32px; font-size: 16px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); opacity: 0.92; }
+  .btn-secondary {
+    background: transparent; color: var(--muted2);
+    border: 1px solid var(--border2); border-radius: 8px;
+    padding: 15px 28px; font-size: 16px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--amber); color: var(--amber); }
+
+  .stats-row {
+    display: flex; gap: 48px; margin-top: 80px;
+    border-top: 1px solid var(--border); padding-top: 48px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--amber); }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .features-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    max-width: 860px; margin: 64px auto 0; padding: 0 24px;
+  }
+  .feature-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 20px;
+    text-align: left; transition: border-color 0.2s;
+  }
+  .feature-card:hover { border-color: rgba(245,166,35,0.3); }
+  .feature-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.2);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; font-size: 16px;
+  }
+  .feature-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .feature-desc { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+  /* ── ANALYZER PAGE ── */
+  #page-analyze {
+    max-width: 700px; margin: 0 auto; padding: 60px 24px 80px;
+  }
+  .page-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--amber); font-weight: 600; margin-bottom: 12px;
+    font-family: 'Syne', sans-serif;
+  }
+  #page-analyze h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+  #page-analyze .sub { color: var(--muted2); font-size: 15px; margin-bottom: 40px; line-height: 1.6; }
+
+  .form-section { margin-bottom: 28px; }
+  label.field-label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--muted2); margin-bottom: 8px;
+    font-family: 'Syne', sans-serif; letter-spacing: 0.3px;
+  }
+  .field-label span { color: var(--amber); }
+  input[type=text], textarea, select {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 15px;
+    padding: 13px 16px; outline: none; transition: border-color 0.2s;
+  }
+  input[type=text]:focus, textarea:focus, select:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-glow);
+  }
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  select option { background: var(--bg3); }
+  .input-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .option-input-wrap { position: relative; }
+  .option-tag {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 11px; font-weight: 700; font-family: 'Syne', sans-serif;
+    color: var(--amber); letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+  .option-input-wrap input { padding-left: 42px; }
+
+  .goals-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .goal-chip {
+    border: 1px solid var(--border2); border-radius: 100px;
+    padding: 7px 14px; font-size: 13px; color: var(--muted2);
+    cursor: pointer; transition: all 0.18s; background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .goal-chip.selected {
+    border-color: var(--amber); background: var(--amber-dim); color: var(--amber);
+  }
+  .goal-chip:hover:not(.selected) { border-color: var(--border2); color: var(--text); }
+
+  .risk-slider-wrap { display: flex; align-items: center; gap: 16px; }
+  input[type=range] {
+    flex: 1; appearance: none; height: 4px;
+    background: var(--bg3); border-radius: 2px; outline: none;
+    border: none; padding: 0;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--amber); cursor: pointer; border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--amber);
+  }
+  .risk-label { font-size: 13px; color: var(--amber); font-weight: 600;
+    font-family: 'Syne', sans-serif; min-width: 90px; text-align: right; }
+
+  .submit-btn {
+    width: 100%; background: var(--amber); color: #0a0b0f;
+    border: none; border-radius: var(--radius-sm);
+    padding: 16px; font-size: 16px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s; margin-top: 8px;
+  }
+  .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── RESULTS PAGE ── */
+  #page-results { max-width: 800px; margin: 0 auto; padding: 60px 24px 100px; }
+  .results-header { margin-bottom: 40px; }
+  .results-header h2 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .results-meta { font-size: 14px; color: var(--muted2); }
+
+  /* Loading */
+  .loading-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 400px; gap: 20px;
+  }
+  .loader-ring {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid var(--bg3); border-top-color: var(--amber);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--muted2); font-size: 15px; }
+  .loading-steps { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .loading-step { font-size: 13px; color: var(--muted); opacity: 0; transition: opacity 0.4s; }
+  .loading-step.visible { opacity: 1; color: var(--amber); }
+
+  /* Result sections */
+  .result-section {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 28px; margin-bottom: 16px;
+  }
+  .result-section-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .result-section-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .icon-amber { background: var(--amber-dim); }
+  .icon-green { background: rgba(74,222,128,0.1); }
+  .icon-blue { background: rgba(96,165,250,0.1); }
+  .icon-red { background: rgba(248,113,113,0.1); }
+  .result-section-title {
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted2);
+  }
+
+  /* Breakdown grid */
+  .breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .breakdown-option {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 16px;
+  }
+  .breakdown-option-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--amber); font-family: 'Syne', sans-serif; margin-bottom: 10px;
+  }
+  .breakdown-item { margin-bottom: 8px; }
+  .breakdown-item-key {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 2px;
+  }
+  .breakdown-item-val { font-size: 14px; color: var(--text); line-height: 1.5; }
+
+  /* Score bars */
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .score-label { font-size: 13px; color: var(--muted2); width: 140px; flex-shrink: 0; }
+  .score-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .score-fill {
+    height: 100%; border-radius: 3px; background: var(--amber);
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .score-fill.green { background: var(--green); }
+  .score-fill.blue { background: var(--blue); }
+  .score-val { font-size: 13px; font-weight: 600; color: var(--text); width: 28px; text-align: right; font-family: 'Syne', sans-serif; }
+
+  /* Scenario paths */
+  .scenario-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .scenario-tab {
+    padding: 7px 16px; border-radius: 100px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border2); background: transparent; color: var(--muted2);
+    cursor: pointer; transition: all 0.18s; font-family: 'Syne', sans-serif;
+  }
+  .scenario-tab.active { border-color: var(--amber); background: var(--amber-dim); color: var(--amber); }
+  .scenario-content { display: none; }
+  .scenario-content.active { display: block; }
+  .timeline-row { display: flex; gap: 0; margin-bottom: 0; }
+  .timeline-point {
+    flex: 1; position: relative; padding: 0 8px 20px;
+    border-top: 2px solid var(--border);
+  }
+  .timeline-point::before {
+    content: ''; position: absolute; top: -6px; left: 0;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--amber); border: 2px solid var(--bg2);
+  }
+  .timeline-period { font-size: 11px; color: var(--amber); font-weight: 700; margin-top: 12px; margin-bottom: 6px; font-family: 'Syne', sans-serif; letter-spacing: 0.5px; }
+  .timeline-content { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+  /* Recommendation */
+  .rec-banner {
+    background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.25);
+    border-radius: var(--radius); padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+  .rec-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 8px; }
+  .rec-choice { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+  .rec-reasoning { font-size: 15px; color: var(--muted2); line-height: 1.7; }
+
+  /* Risk assessment */
+  .risks-list { display: flex; flex-direction: column; gap: 10px; }
+  .risk-item { display: flex; gap: 12px; align-items: flex-start; }
+  .risk-indicator {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px;
+  }
+  .risk-high { background: var(--red); }
+  .risk-med { background: var(--amber); }
+  .risk-low { background: var(--green); }
+  .risk-text { font-size: 14px; color: var(--muted2); line-height: 1.5; }
+  .risk-text strong { color: var(--text); }
+
+  /* Action bar */
+  .result-actions { display: flex; gap: 12px; margin-top: 32px; }
+  .btn-restart {
+    flex: 1; background: transparent; border: 1px solid var(--border2);
+    color: var(--muted2); border-radius: var(--radius-sm);
+    padding: 13px; font-size: 14px; font-weight: 600;
+    font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.18s;
+  }
+  .btn-restart:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* error */
+  .error-box {
+    background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2);
+    border-radius: var(--radius); padding: 20px 24px; color: var(--red);
+    font-size: 14px; line-height: 1.6; margin-top: 20px;
+  }
+  .error-box a { color: var(--amber); }
+
+  /* How it works section on home */
+  .how-section {
+    max-width: 860px; margin: 80px auto 0; padding: 0 24px 80px;
+  }
+  .how-section .section-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--amber); font-weight: 600; margin-bottom: 12px;
+    font-family: 'Syne', sans-serif; text-align: center;
+  }
+  .how-section h2 { font-size: 36px; font-weight: 800; letter-spacing: -1px; text-align: center; margin-bottom: 48px; }
+  .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .step-card { padding: 24px 16px; text-align: center; }
+  .step-num {
+    font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800;
+    color: var(--border2); line-height: 1; margin-bottom: 12px;
+  }
+  .step-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .step-desc { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .features-row { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr 1fr; }
+    .breakdown-grid { grid-template-columns: 1fr; }
+    .stats-row { gap: 24px; }
+    #page-analyze, #page-results { padding: 40px 16px 80px; }
+    .options-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="showPage('home')">
+    <span class="logo-dot"></span> Foresight
+  </div>
+  <button class="nav-cta" onclick="showPage('analyze')">Analyze a Decision</button>
+</nav>
+
+<!-- ══════════════ HOME PAGE ══════════════ -->
+<div id="page-home" class="page active">
+  <div class="home-grid-bg"></div>
+
+  <div class="home-badge">
+    <span class="badge-dot"></span>
+    AI-Powered Career Intelligence
+  </div>
+
+  <h1 class="hero">
+    See your future<br>before you <span class="hero-accent">choose it.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Stop guessing. Input any career decision and get a structured breakdown, skill analysis, and simulated life paths — in under 60 seconds.
+  </p>
+
+  <div class="cta-group">
+    <button class="btn-primary" onclick="showPage('analyze')">Analyze my decision →</button>
+    <button class="btn-secondary" onclick="scrollToHow()">How it works</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num">7</div>
+      <div class="stat-label">analysis dimensions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">simulated futures</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">&lt;60s</div>
+      <div class="stat-label">per analysis</div>
+    </div>
+  </div>
+
+  <div class="features-row">
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Structured Breakdown</div>
+      <div class="feature-desc">Not just AI text — organized into categories like skills, risk, opportunity cost, and network effects.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔭</div>
+      <div class="feature-title">Scenario Simulation</div>
+      <div class="feature-desc">See 3 realistic future paths for each option — where you'll be in 1 year, 3 years, and early career.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚖️</div>
+      <div class="feature-title">Honest Tradeoffs</div>
+      <div class="feature-desc">Risk assessment, opportunity costs, and a clear recommendation with reasoning — not just validation.</div>
+    </div>
+  </div>
+
+  <div class="how-section" id="how-section">
+    <div class="section-label">How it works</div>
+    <h2>Strategic thinking, structured.</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-title">Describe your decision</div>
+        <div class="step-desc">Name the two options you're weighing — be specific.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-num">02</div>
+        <div class="step-title">Add context</div>
+        <div class="step-desc">Your goals, risk tolerance, and what matters most to you right now.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-title">AI analyzes</div>
+        <div class="step-desc">Claude evaluates your decision across 7 dimensions using structured prompts.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <div class="step-title">See your futures</div>
+        <div class="step-desc">Get a full breakdown and 3 simulated life paths for each option.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ANALYZE PAGE ══════════════ -->
+<div id="page-analyze" class="page">
+  <div class="page-label">Decision Analyzer</div>
+  <h2>What decision are you facing?</h2>
+  <p class="sub">Be specific — the more context you give, the more accurate the analysis. This takes about 60 seconds to generate.</p>
+
+  <div class="form-section">
+    <label class="field-label">Your two options <span>*</span></label>
+    <div class="options-grid">
+      <div class="option-input-wrap">
+        <span class="option-tag">A</span>
+        <input type="text" id="option-a" placeholder="e.g. Startup internship" />
+      </div>
+      <div class="option-input-wrap">
+        <span class="option-tag">B</span>
+        <input type="text" id="option-b" placeholder="e.g. Corporate internship" />
+      </div>
+    </div>
+    <div class="input-hint">These can be job offers, schools, majors, roles, or any real-life decision.</div>
+  </div>
+
+  <div class="form-section">
+    <label class="field-label">Context & background <span>*</span></label>
+    <textarea id="context" placeholder="Tell me more — what's your current situation? What year are you in? What do you care about? Any constraints? (2-3 sentences is enough)"></textarea>
+  </div>
+
+  <div class="form-section">
+    <label class="field-label">Your primary goals right now</label>
+    <div class="goals-grid" id="goals-grid">
+      <button class="goal-chip" onclick="toggleGoal(this)">High income ASAP</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Build technical skills</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Grow my network</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Work-life balance</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Entrepreneurship path</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Job security</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Prestige & brand name</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Explore & experiment</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Leadership experience</button>
+      <button class="goal-chip" onclick="toggleGoal(this)">Finish degree well</button>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <label class="field-label">Risk tolerance</label>
+    <div class="risk-slider-wrap">
+      <input type="range" min="1" max="5" value="3" id="risk-slider" oninput="updateRisk(this.value)" />
+      <span class="risk-label" id="risk-label">Moderate</span>
+    </div>
+  </div>
+
+  <div id="form-error" class="error-box" style="display:none"></div>
+
+  <button class="submit-btn" id="submit-btn" onclick="submitDecision()">
+    Simulate my futures →
+  </button>
+</div>
+
+<!-- ══════════════ RESULTS PAGE ══════════════ -->
+<div id="page-results" class="page">
+
+  <!-- Loading state -->
+  <div class="loading-state" id="loading-state">
+    <div class="loader-ring"></div>
+    <div>
+      <div class="loading-text">Analyzing your decision…</div>
+      <div class="loading-steps">
+        <div class="loading-step" id="ls1">Mapping short-term tradeoffs</div>
+        <div class="loading-step" id="ls2">Evaluating skill development paths</div>
+        <div class="loading-step" id="ls3">Calculating opportunity costs</div>
+        <div class="loading-step" id="ls4">Simulating future scenarios</div>
+        <div class="loading-step" id="ls5">Writing your recommendation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results content -->
+  <div id="results-content" style="display:none">
+
+    <div class="results-header">
+      <div class="page-label">Decision Analysis</div>
+      <h2 id="result-title">Your Analysis</h2>
+      <div class="results-meta" id="result-meta"></div>
+    </div>
+
+    <!-- RECOMMENDATION -->
+    <div class="rec-banner" id="rec-section">
+      <div class="rec-label">AI Recommendation</div>
+      <div class="rec-choice" id="rec-choice"></div>
+      <div class="rec-reasoning" id="rec-reasoning"></div>
+    </div>
+
+    <!-- SCORE COMPARISON -->
+    <div class="result-section">
+      <div class="result-section-header">
+        <div class="result-section-icon icon-amber">📊</div>
+        <div class="result-section-title">Dimension Scores</div>
+      </div>
+      <div id="scores-container"></div>
+    </div>
+
+    <!-- BREAKDOWN -->
+    <div class="result-section">
+      <div class="result-section-header">
+        <div class="result-section-icon icon-blue">⚖️</div>
+        <div class="result-section-title">Side-by-Side Breakdown</div>
+      </div>
+      <div class="breakdown-grid">
+        <div class="breakdown-option">
+          <div class="breakdown-option-label" id="breakdown-a-label">Option A</div>
+          <div id="breakdown-a"></div>
+        </div>
+        <div class="breakdown-option">
+          <div class="breakdown-option-label" id="breakdown-b-label">Option B</div>
+          <div id="breakdown-b"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENARIOS -->
+    <div class="result-section">
+      <div class="result-section-header">
+        <div class="result-section-icon icon-green">🔭</div>
+        <div class="result-section-title">Simulated Future Paths</div>
+      </div>
+      <div class="scenario-tabs" id="scenario-tabs"></div>
+      <div id="scenario-contents"></div>
+    </div>
+
+    <!-- RISKS -->
+    <div class="result-section">
+      <div class="result-section-header">
+        <div class="result-section-icon icon-red">⚠️</div>
+        <div class="result-section-title">Risk Assessment</div>
+      </div>
+      <div class="risks-list" id="risks-list"></div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-restart" onclick="showPage('analyze')">← Analyze another decision</button>
+      <button class="btn-restart" onclick="showPage('home')">← Back to home</button>
+    </div>
+
+  </div>
+
+  <div id="results-error" class="error-box" style="display:none"></div>
+</div>
+
+<script>
+const riskLabels = ['', 'Very Low', 'Low', 'Moderate', 'High', 'Very High'];
+function updateRisk(v) { document.getElementById('risk-label').textContent = riskLabels[v]; }
+function toggleGoal(el) { el.classList.toggle('selected'); }
+function scrollToHow() { document.getElementById('how-section').scrollIntoView({behavior:'smooth'}); }
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) { page.classList.add('active'); window.scrollTo(0,0); }
+}
+
+function getSelectedGoals() {
+  return [...document.querySelectorAll('.goal-chip.selected')].map(c => c.textContent).join(', ');
+}
+
+async function submitDecision() {
+  const optA = document.getElementById('option-a').value.trim();
+  const optB = document.getElementById('option-b').value.trim();
+  const ctx  = document.getElementById('context').value.trim();
+  const errEl = document.getElementById('form-error');
+  errEl.style.display = 'none';
+
+  if (!optA || !optB) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Please fill in both options before continuing.';
+    return;
+  }
+  if (!ctx) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Please add some context about your situation — it helps the AI give better advice.';
+    return;
+  }
+
+  const goals = getSelectedGoals() || 'Not specified';
+  const risk  = riskLabels[document.getElementById('risk-slider').value];
+
+  document.getElementById('submit-btn').disabled = true;
+  showPage('results');
+
+  document.getElementById('loading-state').style.display = 'flex';
+  document.getElementById('results-content').style.display = 'none';
+  document.getElementById('results-error').style.display = 'none';
+
+  // Animate loading steps
+  const steps = ['ls1','ls2','ls3','ls4','ls5'];
+  steps.forEach((id, i) => {
+    setTimeout(() => document.getElementById(id).classList.add('visible'), i * 1800 + 600);
+  });
+
+  const prompt = `You are a strategic career advisor. Analyze this decision and respond ONLY with valid JSON (no markdown, no extra text).
+
+DECISION: "${optA}" vs "${optB}"
+CONTEXT: ${ctx}
+GOALS: ${goals}
+RISK TOLERANCE: ${risk}
+
+Return this exact JSON structure:
+{
+  "optionA": "${optA}",
+  "optionB": "${optB}",
+  "recommendation": {
+    "choice": "Option A: [name]" or "Option B: [name]",
+    "reasoning": "2-3 sentence explanation of why this is the better fit given their specific goals and context"
+  },
+  "scores": [
+    {"dimension": "Short-term income", "a": 7, "b": 9},
+    {"dimension": "Skill development", "a": 8, "b": 6},
+    {"dimension": "Network building", "a": 7, "b": 8},
+    {"dimension": "Long-term trajectory", "a": 8, "b": 7},
+    {"dimension": "Work-life balance", "a": 6, "b": 8},
+    {"dimension": "Risk level", "a": 4, "b": 7},
+    {"dimension": "Goal alignment", "a": 8, "b": 6}
+  ],
+  "breakdown": {
+    "a": {
+      "shortTerm": "1-2 sentence description of immediate benefits",
+      "longTerm": "1-2 sentence description of long-term career impact",
+      "skillsGained": "Key skills they'd develop",
+      "opportunityCost": "What they'd miss out on by NOT picking B"
+    },
+    "b": {
+      "shortTerm": "1-2 sentence description",
+      "longTerm": "1-2 sentence description",
+      "skillsGained": "Key skills they'd develop",
+      "opportunityCost": "What they'd miss out on by NOT picking A"
+    }
+  },
+  "scenarios": [
+    {
+      "label": "Best case",
+      "a": {
+        "year1": "Where they are 1 year in if Option A works out well",
+        "year3": "Where they are 3 years in",
+        "earlyCareer": "Early career trajectory at 5+ years"
+      },
+      "b": {
+        "year1": "Where they are 1 year in if Option B works out well",
+        "year3": "Where they are 3 years in",
+        "earlyCareer": "Early career trajectory at 5+ years"
+      }
+    },
+    {
+      "label": "Realistic",
+      "a": {
+        "year1": "Realistic 1-year outcome for Option A",
+        "year3": "Realistic 3-year outcome",
+        "earlyCareer": "Realistic early career trajectory"
+      },
+      "b": {
+        "year1": "Realistic 1-year outcome for Option B",
+        "year3": "Realistic 3-year outcome",
+        "earlyCareer": "Realistic early career trajectory"
+      }
+    },
+    {
+      "label": "Worst case",
+      "a": {
+        "year1": "Worst-case 1-year outcome for Option A",
+        "year3": "Worst-case 3-year outcome",
+        "earlyCareer": "Worst-case early career trajectory"
+      },
+      "b": {
+        "year1": "Worst-case 1-year outcome for Option B",
+        "year3": "Worst-case 3-year outcome",
+        "earlyCareer": "Worst-case early career trajectory"
+      }
+    }
+  ],
+  "risks": [
+    {"level": "high", "text": "Risk description for one serious concern"},
+    {"level": "med", "text": "Moderate risk description"},
+    {"level": "low", "text": "Minor risk or thing to watch"},
+    {"level": "med", "text": "Another moderate consideration"}
+  ]
+}
+
+Make all content specific to their actual situation — not generic advice. Scores should be realistic (not all 8s and 9s). Be honest about tradeoffs.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c => c.text || '').join('');
+    const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderResults(json, optA, optB);
+  } catch(e) {
+    document.getElementById('loading-state').style.display = 'none';
+    const errEl = document.getElementById('results-error');
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<strong>Something went wrong.</strong> ${e.message}<br><br>
+      Make sure you have an Anthropic API key configured, or <a href="#" onclick="showPage('analyze'); return false">go back</a> and try again.`;
+  } finally {
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+function renderResults(d, optA, optB) {
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  document.getElementById('result-title').textContent = `${optA} vs. ${optB}`;
+  document.getElementById('result-meta').textContent = `Analysis generated • ${new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}`;
+
+  // Recommendation
+  document.getElementById('rec-choice').textContent = d.recommendation.choice;
+  document.getElementById('rec-reasoning').textContent = d.recommendation.reasoning;
+
+  // Scores
+  const sc = document.getElementById('scores-container');
+  sc.innerHTML = '';
+  const colors = ['amber','blue','green','amber','blue','green','amber'];
+  d.scores.forEach((s, i) => {
+    sc.innerHTML += `
+      <div class="score-row">
+        <div class="score-label">${s.dimension}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:11px;color:var(--amber);width:20px;font-family:'Syne',sans-serif;font-weight:700">A</div>
+            <div class="score-track" style="flex:1"><div class="score-fill ${colors[i]}" style="width:${s.a*10}%"></div></div>
+            <div class="score-val">${s.a}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:11px;color:var(--muted2);width:20px;font-family:'Syne',sans-serif;font-weight:700">B</div>
+            <div class="score-track" style="flex:1"><div class="score-fill" style="width:${s.b*10}%;background:var(--muted)"></div></div>
+            <div class="score-val">${s.b}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // Breakdown
+  document.getElementById('breakdown-a-label').textContent = 'Option A: ' + d.optionA;
+  document.getElementById('breakdown-b-label').textContent = 'Option B: ' + d.optionB;
+  const fields = [['shortTerm','Short-term'],['longTerm','Long-term'],['skillsGained','Skills'],['opportunityCost','Opportunity cost']];
+  ['a','b'].forEach(side => {
+    const el = document.getElementById('breakdown-' + side);
+    el.innerHTML = fields.map(([k,label]) => `
+      <div class="breakdown-item">
+        <div class="breakdown-item-key">${label}</div>
+        <div class="breakdown-item-val">${d.breakdown[side][k]}</div>
+      </div>`).join('');
+  });
+
+  // Scenarios
+  const tabsEl = document.getElementById('scenario-tabs');
+  const contEl = document.getElementById('scenario-contents');
+  tabsEl.innerHTML = '';
+  contEl.innerHTML = '';
+  d.scenarios.forEach((sc2, i) => {
+    tabsEl.innerHTML += `<button class="scenario-tab${i===0?' active':''}" onclick="switchTab(${i})">${sc2.label}</button>`;
+    contEl.innerHTML += `<div class="scenario-content${i===0?' active':''}" id="sc-${i}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${['a','b'].map(side => `
+          <div class="breakdown-option">
+            <div class="breakdown-option-label">${side === 'a' ? d.optionA : d.optionB}</div>
+            <div class="timeline-row">
+              ${[['year1','1 Year'],['year3','3 Years'],['earlyCareer','Career']].map(([k,label]) => `
+                <div class="timeline-point">
+                  <div class="timeline-period">${label}</div>
+                  <div class="timeline-content">${sc2[side][k]}</div>
+                </div>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  // Risks
+  const risksEl = document.getElementById('risks-list');
+  risksEl.innerHTML = d.risks.map(r => `
+    <div class="risk-item">
+      <div class="risk-indicator risk-${r.level}"></div>
+      <div class="risk-text">${r.text}</div>
+    </div>`).join('');
+}
+
+function switchTab(idx) {
+  document.querySelectorAll('.scenario-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.scenario-content').forEach((c,i) => c.classList.toggle('active', i===idx));
+}
+</script>
+</body>
+</html>
